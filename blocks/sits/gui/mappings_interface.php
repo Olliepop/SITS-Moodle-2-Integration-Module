@@ -52,7 +52,7 @@ echo $OUTPUT->header();?>
 			<div id="course_filter" class="filter">
 				<input id="course_search_input" type="text" onkeyup="sits_block.filterCourses(this.value)"></input>
 				<span id = "filter_message">Filter by course name or idnumber</span>
-				<input type="submit" style="float: right;" value="Close Cohorts and Groups Interface" onclick="sits_block.exit();" />
+				<input type="submit" style="float: right;" value="Close Manage Mappings Interface" onclick="sits_block.exit();" />
 			</div>
 	</div>
 	<div id="cohorts">

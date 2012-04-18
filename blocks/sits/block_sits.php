@@ -78,20 +78,15 @@ class block_sits extends block_base {
 <a href="#" onclick="open_samis_add_user_window();">$adduser_title</a>
 html;
 
-           // if(has_capability('moodle/site:doanything', $context)){
-           // FIXME Do some checking of authoritah here:
-            if(true){
+            if(has_capability('moodle/site:config', $context)){
                 $markup .= '<br/>---';
                 $markup .= '<br/><a href="#" onclick="open_samis_admin_window();">' . get_string('sits_admin','block_sits') . '</a>';
             }
         }else{
             $markup = '<b>The block is currently disabled</b>.<br/><br/>' . $CFG->sits_disable_message . '</br/>';
         }
-        //Administrator Only Functionality
-
-           // if(has_capability('moodle/site:doanything', $context)){
-           // FIXME Do some checking of authoritah here:
-            if(true){
+            //Administrator Only Functionality
+            if(has_capability('moodle/site:config', $context)){
             $markup .= '<br/><a href="/admin/settings.php?section=blocksettingsits">' . get_string('sits_settings','block_sits') . '</a>';
         }
         $this->content = new stdClass;

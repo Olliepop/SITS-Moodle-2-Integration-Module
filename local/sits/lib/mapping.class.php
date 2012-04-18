@@ -1,9 +1,11 @@
 <?php
 /**
  * Defines a mapping of a SITS cohort to a Moodle course
- * @package moodle_sits_block
- * @author Alex Lydiate <alexlydiate [at] gmail [dot] com>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v2 or later
+ * @package    local
+ * @subpackage sits
+ * @copyright  2011 University of Bath
+ * @author     Alex Lydiate {@link http://alexlydiate.co.uk}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mapping {
 

@@ -13,6 +13,8 @@ require_once($CFG->dirroot . '/local/sits/lib/report.class.php');
 require_once($CFG->dirroot . '/local/sits/lib/mapping.class.php');
 require_once($CFG->dirroot . '/local/sits/lib/mapping_action.class.php');
 
+require_once($CFG->dirroot . '/course/lib.php');
+
 /**
  * @package moodle_sits_block
  * @author Alex Lydiate <alexlydiate [at] gmail [dot] com>
@@ -105,15 +107,15 @@ class enrol_sits_plugin extends enrol_plugin implements i_sits_sync {
     public function get_newinstance_link($courseid) {
     	global $DB;
     
-    	$context = get_context_instance(CONTEXT_COURSE, $courseid, MUST_EXIST);
+    	$context = context_course::instance($courseid);
     
-    	/*if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/autoroster:config', $context)) {
+    	if (!has_capability('moodle/course:enrolconfig', $context)) {
     		return NULL;
-    	}*/
+    	}
     
-    	/*if ($DB->record_exists('enrol', array('courseid'=>$courseid, 'enrol'=>'autoroster'))) {
+    	if ($DB->record_exists('enrol', array('courseid'=>$courseid, 'enrol'=>'sits'))) {
     		return NULL;
-    	}*/
+    	}
     
     	return new moodle_url('/enrol/sits/edit.php', array('courseid'=>$courseid));
     }
@@ -131,7 +133,8 @@ class enrol_sits_plugin extends enrol_plugin implements i_sits_sync {
     		throw new coding_exception('Invalid enrol instance type!');
     	}
     
-    	$context = get_context_instance(CONTEXT_COURSE, $instance->courseid);
+    	$context = context_course::instance($instance->courseid);
+    	
     	/*if (has_capability('enrol/autoroster:config', $context)) {*/
     		$managelink = new moodle_url('/enrol/sits/edit.php', array('courseid'=>$instance->courseid));
     		$instancesnode->add($this->get_instance_name($instance), $managelink, navigation_node::TYPE_SETTING);
@@ -163,7 +166,7 @@ class enrol_sits_plugin extends enrol_plugin implements i_sits_sync {
     	if ($instance->enrol !== $name) {
     		throw new coding_exception('invalid enrol instance!');
     	}
-    	$context = get_context_instance(CONTEXT_COURSE, $instance->courseid, MUST_EXIST);
+    	$context = context_course::instance($instance->courseid);
     
     	$inserted = false;
     	if ($ue = $DB->get_record('user_enrolments', array('enrolid'=>$instance->id, 'userid'=>$userid))) {
@@ -684,6 +687,15 @@ sql;
     	return groups_create_group($data);
     }
     
+    /////////////////////Public static functions////////////////
+    
+    public function mapping_for_user_in_context($contextid, $userid){
+    	GLOBAL $DB;
+    	$role_assignment = $DB->get_record('role_assignments', array('contextid' => $contextid, 'userid' => $userid));
+    	$mapping_id = substr($role_assignment->component, 10);
+    	return $this->read_mapping_from_id($mapping_id);
+    }
+    
     /////////////////////Private Functions//////////////////////
 
     /**
@@ -892,11 +904,6 @@ sql;
      */
 private function create_course_for_cohort(&$cohort_data){
 	GLOBAL $DB;
-    /*$site = get_site();
-           if(!$site){
-           $this->report->log_report(1, 'Could not get data template from get_record in build_course_data()');
-           return false;
-        } */  
 		
         $course_data = new StdClass();     
         $course_data->startdate = time() + 3600 * 24;
@@ -1018,6 +1025,21 @@ private function create_course_for_cohort(&$cohort_data){
      */
     private function process_sync(&$rh, &$mapping){
     	GLOBAL $DB;
+
+    	//Ensure instance exists of this on the course
+    	$instance = $DB->get_record("enrol", array("courseid" => $mapping->courseid, "enrol" => "sits"));
+    	
+    	if(!is_object($instance)){
+    		$course = $DB->get_record("course",  array("id" => $mapping->courseid));
+    		if(!is_object($course)){
+    			$this->report->log_report(1, 'Could not get course record for course id ' . $mapping->courseid);
+    			return false;
+    		}
+    		if(is_null($this->add_instance($course))){
+    			$this->report->log_report(1, 'Could not create instance of sits_enrol for course id ' . $course->id);
+    			return false;
+    		}
+    	}
         
         $sits_cohort_members = array();
         //Possible FIXME - I can't find a way of using an OCI8 resource handle twice in a while() loop - I think the cursor runs to the end,
@@ -1030,7 +1052,8 @@ private function create_course_for_cohort(&$cohort_data){
             $this->report->log_report(1, 'Failed to complete check of whether assignments still in cohort for Mapping id '  . $mapping->id);
         }
         //Get context and instance now - return false if fail
-        $course_context = get_context_instance(CONTEXT_COURSE, $mapping->courseid);
+        
+        $course_context = context_course::instance($mapping->courseid);
         
         if($course_context === false){
             $this->report->log_report(1, 'Failed to sync '  . $mapping->id . '; could not get course context');
@@ -1069,6 +1092,7 @@ private function create_course_for_cohort(&$cohort_data){
         
         return true;
     }
+
     /**
      * Enrols a user on a course with a role
      * @return bool true on adding the user to the course, false if not
@@ -1273,13 +1297,15 @@ sql;
      * @return boolean
      */
     private function ensure_module_has_default_mapping(&$courses, &$module_cohort){
-        //Set boolean return variable to be switched if there is a problem
-        $return = true;
+        
+    	GLOBAL $DB;
+    	//Set boolean return variable to be switched if there is a problem
+        $return = true;       
 
-        foreach($courses as $course){
+        foreach($courses as $course){      	
             $mapping = $this->read_mapping_for_course($module_cohort, $course->id);
             if(is_object($mapping)){ //No need to create it - but is it marked as a default and active?
-                if(!$mapping->default || !$mapping->active){ //No it isn't!  An outrage, make it so:
+                if(!$mapping->default || !$mapping->active){ //No it is not!  An outrage, make it so:
                     if(!$this->convert_mapping_to_active_default($mapping)){
                         $this->report->log_report(1, 'Failed to convert mapping ' . $mapping->id . ' to default');   
                     }

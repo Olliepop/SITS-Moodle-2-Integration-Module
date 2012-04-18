@@ -305,14 +305,21 @@ sits_block.showAddToExistingGroups = function () {
 };
 
 sits_block.setDatesDisabledAttribute = function (mapId, disabled) {
-	var element;
+	var dayElement, monElement, yearElement;
 	
-	element = YAHOO.util.Dom.get('id_' + mapId + '_map_day');
-	element.disabled = disabled;
-	element = YAHOO.util.Dom.get('id_' + mapId + '_map_month');
-	element.disabled = disabled;
-	element = YAHOO.util.Dom.get('id_' + mapId + '_map_year');
-	element.disabled = disabled;
+	dayElement = YAHOO.util.Dom.get('id_' + mapId + '_map_day');
+	monElement = YAHOO.util.Dom.get('id_' + mapId + '_map_month');
+	yearElement = YAHOO.util.Dom.get('id_' + mapId + '_map_year');
+	
+	if(disabled){
+		YAHOO.util.Dom.addClass(dayElement, "disabled");
+		YAHOO.util.Dom.addClass(monElement, "disabled");
+		YAHOO.util.Dom.addClass(yearElement, "disabled");
+	}
+
+	dayElement.disabled = disabled;
+	monElement.disabled = disabled;
+	yearElement.disabled = disabled;
 };
 
 sits_block.createMappingXML = function (course_id, sits_code, type, academic_year, period_code, year_group,
@@ -334,7 +341,7 @@ sits_block.createMappingXML = function (course_id, sits_code, type, academic_yea
 		XML += '<period_code>' + period_code + '</period_code>';
 		XML += '</cohort>';		
 	}	
-	if (type === 'programme') {
+	if (type === 'program') {
 		XML += '<cohort>';
 		XML += '<type>program</type>';
 		XML += '<sits_code>' + sits_code + '</sits_code>';
@@ -349,7 +356,7 @@ sits_block.createMappingXML = function (course_id, sits_code, type, academic_yea
 sits_block.toggle_dates = function (mapId)
 {
 	var element = YAHOO.util.Dom.get('id_' + mapId + '_map_unenrol_type'), disabled;
-	
+
 	if (1 === element.selectedIndex) {
 		disabled = false;
 	} else {
@@ -806,7 +813,7 @@ sits_block.asyncRequest = function (op, xml) {
 				xmlDoc = sits_block.loadXMLString(o.responseText);
 				message = xmlDoc.getElementsByTagName("message");
 				sits_block.killBlur();
-				alert(message[0].firstChild.data);
+				//alert(message[0].firstChild.data);
 			};
 		break;
 		case 'get_map_ids':
@@ -1157,7 +1164,7 @@ sits_block.displayMapLoader = function (course_id) {
 
 sits_block.exit = function () {
 	var confirmed;
-	confirmed = confirm('Click OK to close the Cohorts and Groups interface');
+	confirmed = confirm('Click OK to close the Mappings Interface');
 	if (confirmed)
 	{
 		window.close();
@@ -1202,10 +1209,10 @@ sits_block.add_module_to_mappings = function (courseid, formid) {
 	yearElement = YAHOO.util.Dom.get(formid + '_year'),
 	acYearElement = YAHOO.util.Dom.get(formid + '_acyear'),	
 	unenrolElement = YAHOO.util.Dom.get(formid + '_unenrol'),
-	dateString = dayElement.value +  ' ' + monElement.value +  ' ' + yearElement.value,
-	date = new Date(dateString),
+	date = new Date(yearElement.value, monElement.value-1, dayElement.value),
 	today = new Date(),
 	dateStringToSend = date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString() + '-' + date.getDate().toString(),
+	
 	progPatt = /^[A-z]{4}\-[A-z]{3}\d{2}$/,
 	unitPatt = /^[A-z]{2}\d{5}$/;
 	
@@ -1451,7 +1458,7 @@ sits_block.disable_save = function (courseid)
 };
 
 sits_block.view_course = function (course_id) {
-	window.open('/blocks/sits/gui/views/enrols.php?id=' + course_id, '', 'height = 600px, width = 800px, scrollbars=yes');
+	window.open('/blocks/sits/gui/views/enrols.php?id=' + course_id, '', 'height = 600px, width = 800px, scrollbars=yesresizable');
 };
 
 sits_block.add_user = function () {

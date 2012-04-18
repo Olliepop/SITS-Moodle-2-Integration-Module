@@ -346,6 +346,18 @@ abstract class sits_db implements i_sits_db {
         && oci_num_rows($this->update_agreed_grade_smr_stm)
         && oci_num_rows($this->insert_agreed_grade_smrt_stm));
     }
+    /**
+     * returns the student number for a bucs_id
+     * @param unknown_type $bucs_id
+     */
+    public function get_spr_from_bucs_id($bucs_id,&$cohort){
+        $this->bucs_id = $bucs_id;
+        $this->ac_year = $cohort->academic_year;
+        if(!oci_execute($this->get_spr_from_bucs_id_stm)){
+            return false;
+        }
+        return oci_fetch_object($this->get_spr_from_bucs_id_stm);
+    }
 
     //Protected functions
 
@@ -415,18 +427,6 @@ abstract class sits_db implements i_sits_db {
                 return $single_year_stm;
             }
         }
-    }
-    /**
-     * returns the student number for a bucs_id
-     * @param unknown_type $bucs_id
-     */
-    protected function get_spr_from_bucs_id($bucs_id,&$cohort){
-        $this->bucs_id = $bucs_id;
-        $this->ac_year = $cohort->academic_year;
-        if(!oci_execute($this->get_spr_from_bucs_id_stm)){
-            return false;
-        }
-        return oci_fetch_object($this->get_spr_from_bucs_id_stm);
     }
     
     //Programs SQL setters

@@ -45,7 +45,7 @@ if(has_capability('moodle/course:manageactivities', $context))
 {
     //Here is the business end of things
     $sits_sync = new enrol_sits_plugin();
-    $user_courses = enrol_get_my_courses();
+    $user_courses = enrol_get_my_courses(null, "fullname ASC");
     $course_is_tutor_on = array();
 
     foreach($user_courses as $cur_course)
