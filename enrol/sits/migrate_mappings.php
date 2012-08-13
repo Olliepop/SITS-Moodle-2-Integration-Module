@@ -92,7 +92,7 @@ while($row = $old_map_stm->fetchObject()){
 
 print 'done';
 
-function pdo_connect(&$dbtype, &$dbhost, &$dbname, &$dbuser, &$dbpass){
+function pdo_connect($dbtype, $dbhost, $dbname, $dbuser, $dbpass){
     $connect_string = '%s:host=%s;dbname=%s';
     return new PDO(sprintf($connect_string, $dbtype, $dbhost, $dbname), $dbuser, $dbpass);
 }

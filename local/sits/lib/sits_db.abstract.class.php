@@ -84,19 +84,19 @@ abstract class sits_db implements i_sits_db {
 
     //Implementation of i_sits_db
 
-    public function mod_student_members_rh(&$module_cohort){
+    public function mod_student_members_rh($module_cohort){
         return $this->return_mod_members_rh($this->mod_student_cohort_stm, $module_cohort);
     }
 
-    public function mod_members_rh(&$module_cohort){
+    public function mod_members_rh($module_cohort){
         return $this->return_mod_members_rh($this->mod_cohort_stm, $module_cohort);
     }
 
-    public function prog_members_rh(&$program_cohort){ //FIXME this function needs tidying up
+    public function prog_members_rh($program_cohort){ //FIXME this function needs tidying up
     return $this->return_prog_members_rh($program_cohort);
     }
 
-    public function prog_student_members_rh(&$program_cohort){
+    public function prog_student_members_rh($program_cohort){
         return $this->return_prog_members_rh($program_cohort, true);
     }
 
@@ -122,7 +122,7 @@ abstract class sits_db implements i_sits_db {
         return $this->all_programs_stm;
     }
 
-    public function validate_module(&$module_cohort){
+    public function validate_module($module_cohort){
 
         $this->sits_code = $module_cohort->sits_code;
         $this->period_code = $module_cohort->period_code;
@@ -142,7 +142,7 @@ abstract class sits_db implements i_sits_db {
         }
     }
 
-    public function validate_program(&$program_cohort){
+    public function validate_program($program_cohort){
 
         $this->sits_code = $program_cohort->sits_code;
         $this->academic_year = $program_cohort->academic_year;
@@ -307,7 +307,7 @@ abstract class sits_db implements i_sits_db {
         }
     }
 
-    public function insert_agreed_grade( &$student,&$grade,&$cohort ){
+    public function insert_agreed_grade( $student,$grade,$cohort ){
 
         $this->spr_code = $this->get_spr_from_bucs_id($student->username,$cohort)->SPR_CODE;
         $this->period_code = $cohort->period_code;
@@ -328,7 +328,7 @@ abstract class sits_db implements i_sits_db {
  * NB update now INSERTS to SMR_T as sas1b does not populate it automatically
  * therefore the conditionally called INSERT function above will not need
  */
-    public function update_agreed_grade( &$student,&$grade,&$cohort ){
+    public function update_agreed_grade( $student,$grade,$cohort ){
 
         $this->spr_code = $this->get_spr_from_bucs_id($student->username,$cohort)->SPR_CODE;
         $this->period_code = $cohort->period_code;
@@ -350,7 +350,7 @@ abstract class sits_db implements i_sits_db {
      * returns the student number for a bucs_id
      * @param unknown_type $bucs_id
      */
-    public function get_spr_from_bucs_id($bucs_id,&$cohort){
+    public function get_spr_from_bucs_id($bucs_id,$cohort){
         $this->bucs_id = $bucs_id;
         $this->ac_year = $cohort->academic_year;
         if(!oci_execute($this->get_spr_from_bucs_id_stm)){
@@ -368,7 +368,7 @@ abstract class sits_db implements i_sits_db {
      * @param module_sql_prog_other_tutorscohort object $module_cohort
      * @return mixed executed statement if successful, false on faliure
      */
-    protected function return_mod_members_rh(&$stm, &$module_cohort){
+    protected function return_mod_members_rh($stm, $module_cohort){
 
         $this->sits_code = $module_cohort->sits_code;
         $this->period_code = $module_cohort->period_code;
@@ -391,7 +391,7 @@ abstract class sits_db implements i_sits_db {
      * @param boolean $student if true, returns just student members, if false students, tutors and other tutors
      * @return mixed executed statement if successful, false on faliure
      */
-    protected function return_prog_members_rh(&$program_cohort, $student = false){
+    protected function return_prog_members_rh($program_cohort, $student = false){
 
         $this->sits_code = $program_cohort->sits_code;
         $this->year_group = $program_cohort->year_group;

@@ -305,21 +305,14 @@ sits_block.showAddToExistingGroups = function () {
 };
 
 sits_block.setDatesDisabledAttribute = function (mapId, disabled) {
-	var dayElement, monElement, yearElement;
+	var element;
 	
-	dayElement = YAHOO.util.Dom.get('id_' + mapId + '_map_day');
-	monElement = YAHOO.util.Dom.get('id_' + mapId + '_map_month');
-	yearElement = YAHOO.util.Dom.get('id_' + mapId + '_map_year');
-	
-	if(disabled){
-		YAHOO.util.Dom.addClass(dayElement, "disabled");
-		YAHOO.util.Dom.addClass(monElement, "disabled");
-		YAHOO.util.Dom.addClass(yearElement, "disabled");
-	}
-
-	dayElement.disabled = disabled;
-	monElement.disabled = disabled;
-	yearElement.disabled = disabled;
+	element = YAHOO.util.Dom.get('id_' + mapId + '_map_day');
+	element.disabled = disabled;
+	element = YAHOO.util.Dom.get('id_' + mapId + '_map_month');
+	element.disabled = disabled;
+	element = YAHOO.util.Dom.get('id_' + mapId + '_map_year');
+	element.disabled = disabled;
 };
 
 sits_block.createMappingXML = function (course_id, sits_code, type, academic_year, period_code, year_group,
@@ -356,7 +349,7 @@ sits_block.createMappingXML = function (course_id, sits_code, type, academic_yea
 sits_block.toggle_dates = function (mapId)
 {
 	var element = YAHOO.util.Dom.get('id_' + mapId + '_map_unenrol_type'), disabled;
-
+	
 	if (1 === element.selectedIndex) {
 		disabled = false;
 	} else {
@@ -787,7 +780,7 @@ sits_block.asyncRequest = function (op, xml) {
 					//sits_block.hideMappingsForCourse(courses[i].firstChild.data);
 					sits_block.disable_save(courses[i].firstChild.data);
 					sits_block.swapLoadMessageForControls(courses[i].firstChild.data, true);
-					sits_block.set_group_options();
+					//sits_block.set_group_options();
 				}	
 			};
 		break;
@@ -813,7 +806,7 @@ sits_block.asyncRequest = function (op, xml) {
 				xmlDoc = sits_block.loadXMLString(o.responseText);
 				message = xmlDoc.getElementsByTagName("message");
 				sits_block.killBlur();
-				//alert(message[0].firstChild.data);
+				alert(message[0].firstChild.data);
 			};
 		break;
 		case 'get_map_ids':

@@ -144,7 +144,7 @@ sql;
         }
     }
 
-    public function create_mapping(&$mapping, $alter_to_default = false){
+    public function create_mapping($mapping, $alter_to_default = false){
     	GLOBAL $DB;
         //Temporary code to alter migrated mappings from old integration if they are found to be the default (including second param of declaration)
         //This can be removed after a successful install onto an old University of Bath Moodle DB FIXME MUST be removed before public release
@@ -194,7 +194,7 @@ sql;
         }
     }
 
-    public function update_mapping(&$mapping){
+    public function update_mapping($mapping){
     	GLOBAL $DB;
         if(!$DB->update_record('sits_mappings', $this->data_row_object_from_mapping($mapping))){
             $this->report->log_report(1, sprintf('Failed to update mapping for %s to %s', $mapping->cohort->sits_code, $mapping->courseid));
@@ -207,7 +207,7 @@ sql;
         }
     }
 
-    public function deactivate_mapping(&$mapping){
+    public function deactivate_mapping($mapping){
         $mapping->active = false; //We're going to keep mapping records in perpetuity - active = false denotes, effectively, removal.
 
         if(!$this->remove_assignments($mapping, true)){
@@ -224,7 +224,7 @@ sql;
         }
     }
 
-    public function delete_mapping(&$mapping){
+    public function delete_mapping($mapping){
     	GLOBAL $DB;
         if($this->remove_assignments($mapping)){
             return $DB->delete_records('sits_mappings', array('id' => $mapping->id));
@@ -234,7 +234,7 @@ sql;
         }
     }
 
-    public function read_mapping_for_course(&$cohort, $courseid){		
+    public function read_mapping_for_course($cohort, $courseid){		
     	GLOBAL $DB;
     	
         if($cohort->type === 'module'){
@@ -368,7 +368,7 @@ sql;
         return $return;
     }
 
-    public function alter_period(&$period_alteration){
+    public function alter_period($period_alteration){
     	GLOBAL $DB;
         $existing_alteration = $DB->get_record('sits_period', array('period_code' => $period_alteration->code, 'acyear' => $period_alteration->academic_year));
         
@@ -480,11 +480,11 @@ sql;
 
     /////////////////Wrapping SITS abstraction services////////////////
 
-    public function validate_module(&$module_cohort){
+    public function validate_module($module_cohort){
         return $this->sits->validate_module($module_cohort);
     }
 
-    public function validate_program(&$program_cohort){
+    public function validate_program($program_cohort){
         return $this->sits->validate_program($program_cohort);
     }
 
@@ -506,11 +506,11 @@ sql;
         return $this->sits->validate_bucs_id($bucs_id);
     }
 
-    public function insert_agreed_grade(&$student,&$grade,&$cohort){
+    public function insert_agreed_grade($student,$grade,$cohort){
         return $this->sits->insert_agreed_grade($student,$grade,$cohort);
     }
 
-    public function update_agreed_grade(&$student,&$grade,&$cohort){
+    public function update_agreed_grade($student,$grade,$cohort){
         return $this->sits->update_agreed_grade($student,$grade,$cohort);
     }
 
@@ -552,7 +552,7 @@ sql;
      * @param mapping object $mapping
      * @return object $data
      */
-    private function data_row_object_from_mapping(&$mapping){
+    private function data_row_object_from_mapping($mapping){
 
         if($mapping->cohort->type === 'module'){
             $data->period_code = $mapping->cohort->period_code;
@@ -602,7 +602,7 @@ sql;
      * @param mapping_action object $mapping_action
      * @return object
      */
-    private function data_row_object_from_mapping_action(&$mapping_action){
+    private function data_row_object_from_mapping_action($mapping_action){
 
         $data->map_id = $mapping_action->map_id;
         $data->userid = $mapping_action->userid;
@@ -725,7 +725,7 @@ sql;
      * @param object $cohort_data FIXME this could be class-defined
      * @return boolean
      */
-private function create_course_for_cohort(&$cohort_data){
+private function create_course_for_cohort($cohort_data){
 	GLOBAL $DB;
     $site = get_site();
         if(!$site){
@@ -783,7 +783,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function sync_mapping(&$mapping){
+    private function sync_mapping($mapping){
         if(($mapping->start < $this->date && $mapping->end > $this->date) || $mapping->start < $this->date && $mapping->manual){ //...go ahead and sync
             switch($mapping->cohort->type){
                 case 'program':
@@ -804,7 +804,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return booleanmodule
      */
-    private function sync_program_mapping(&$mapping){
+    private function sync_program_mapping($mapping){
          
         if($mapping->default){ //Default mappings sync all Tutors, Other Tutors and Students
             $members_rh = $this->sits->prog_members_rh($mapping->cohort);
@@ -823,7 +823,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function sync_module_mapping(&$mapping){
+    private function sync_module_mapping($mapping){
         if($mapping->default){ //Default mappings sync all Tutors, Other Tutors and Students
             $members_rh = $this->sits->mod_members_rh($mapping->cohort);
         }else{ //Non-default mappings only sync students
@@ -845,7 +845,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function process_sync(&$rh, &$mapping){
+    private function process_sync($rh, $mapping){
         
         $sits_cohort_members = array();
         //Possible FIXME - I can't find a way of using an OCI8 resource handle twice in a while() loop - I think the cursor runs to the end,
@@ -899,7 +899,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param int $role_id - Moodle role id
      * @param mapping $mapping
      */
-    private function add_user_to_course($user_id, $role_id, &$mapping){
+    private function add_user_to_course($user_id, $role_id, $mapping){
         //Get context id for the course
         $course_context = get_context_instance(CONTEXT_COURSE, $mapping->courseid);
         //If we can't, log error and return false
@@ -984,7 +984,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param unknown_type $record
      * @return mapping object
      */
-    private function mapping_object_from_record(&$record){
+    private function mapping_object_from_record($record){
         switch($record->type){
             case 'module':
                 $cohort = new module_cohort($record->sits_code, $record->period_code, $record->acyear);
@@ -1017,7 +1017,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean $students_only
      */
-    private function remove_assignments(&$mapping, $students_only = false){
+    private function remove_assignments($mapping, $students_only = false){
     	GLOBAL $DB;
         if($students_only){
             return $DB->delete_records('role_assignments', array('component' => 'sits_' . $mapping->id, 'roleid' => 5));
@@ -1040,7 +1040,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param object $assignment
      * @return boolean
      */
-    private function take_assignment_ownership(&$mapping, &$assignment){
+    private function take_assignment_ownership($mapping, $assignment){
         GLOBAL $DB, $CFG; 
         $update = false;
                  
@@ -1089,7 +1089,7 @@ sql;
      * @param module_cohort object $module_cohort
      * @return boolean
      */
-    private function ensure_module_has_default_mapping(&$courses, &$module_cohort){
+    private function ensure_module_has_default_mapping($courses, $module_cohort){
         //Set boolean return variable to be switched if there is a problem
         $return = true;
 
@@ -1138,7 +1138,7 @@ sql;
      * @param program_cohort object $program_cohort
      * @return boolean
      */
-    private function ensure_program_has_default_mapping(&$courses, &$program_cohort){
+    private function ensure_program_has_default_mapping($courses, $program_cohort){
         //Set boolean return variable to be switched if there is a problem
         $return = true;
 
@@ -1171,7 +1171,7 @@ sql;
      * @param sits_period object $period
      * @return boolean
      */
-    private function update_mappings_for_period(&$period){
+    private function update_mappings_for_period($period){
         $return = true;
         
         $active = 1; //Set all sync with SITS mapping to active so that they will be processed with the new start/end dates
@@ -1217,7 +1217,7 @@ sql;
      * @param mapping object $mapping
      * @param string $action
      */
-    private function add_mapping_action(&$mapping, $action){
+    private function add_mapping_action($mapping, $action){
 
         global $USER, $DB;
         if(is_object($USER)){
@@ -1250,7 +1250,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function validate_mapping(&$mapping){
+    private function validate_mapping($mapping){
         
         $valid = true;
         
@@ -1304,7 +1304,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function convert_mapping_to_active_default(&$mapping){
+    private function convert_mapping_to_active_default($mapping){
         $mapping->default = true;
         $mapping->active = true;
         if($mapping->manual){
@@ -1329,7 +1329,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function remove_assignments_no_longer_in_cohort(&$sits_cohort_members, &$mapping){
+    private function remove_assignments_no_longer_in_cohort($sits_cohort_members, $mapping){
     	GLOBAL $DB;
     	$return = true;
 
@@ -1368,7 +1368,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function housekeep_mapping(&$mapping){
+    private function housekeep_mapping($mapping){
     	GLOBAL $DB;
         $course = $DB->get_record('course', array('id' => $mapping->courseid));
         if(!is_object($course)){

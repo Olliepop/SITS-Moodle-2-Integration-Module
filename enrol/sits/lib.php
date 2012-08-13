@@ -328,7 +328,7 @@ sql;
         }
     }
 
-    public function create_mapping(&$mapping){
+    public function create_mapping($mapping){
     	GLOBAL $DB;
 
         $existing_map = $this->read_mapping_for_course($mapping->cohort, $mapping->courseid);
@@ -363,7 +363,7 @@ sql;
         }
     }
 
-    public function update_mapping(&$mapping){
+    public function update_mapping($mapping){
     	GLOBAL $DB;
         if(!$DB->update_record('sits_mappings', $this->data_row_object_from_mapping($mapping))){
             $this->report->log_report(1, sprintf('Failed to update mapping for %s to %s', $mapping->cohort->sits_code, $mapping->courseid));
@@ -376,7 +376,7 @@ sql;
         }
     }
 
-    public function deactivate_mapping(&$mapping){
+    public function deactivate_mapping($mapping){
         $mapping->active = false; //We're going to keep mapping records in perpetuity - active = false denotes, effectively, removal.
 
         if(!$this->remove_enrols_for_mapping($mapping, true)){
@@ -393,7 +393,7 @@ sql;
         }
     }
 
-    public function delete_mapping(&$mapping){
+    public function delete_mapping($mapping){
     	GLOBAL $DB;
         if($this->remove_enrols_for_mapping($mapping)){
             return $DB->delete_records('sits_mappings', array('id' => $mapping->id));
@@ -403,7 +403,7 @@ sql;
         }
     }
 
-    public function read_mapping_for_course(&$cohort, $courseid){		
+    public function read_mapping_for_course($cohort, $courseid){		
     	GLOBAL $DB;
     	
         if($cohort->type === 'module'){
@@ -537,7 +537,7 @@ sql;
         return $return;
     }
 
-    public function alter_period(&$period_alteration){
+    public function alter_period($period_alteration){
     	GLOBAL $DB;
         $existing_alteration = $DB->get_record('sits_period', array('period_code' => $period_alteration->code, 'acyear' => $period_alteration->academic_year));
         
@@ -580,47 +580,68 @@ sql;
                     }
                 }
             }
+            
             $period = $this->get_period_for_code($row->period_code,$row->acyear);
-            if($this->update_mappings_for_period($period) === false){
-                $return = false;
-                $this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $period->code . ', academic year ' . $period->academic_year);
+            
+            if(!$period){
+            	$this->report->log_report(1, 'Failed to instantiate period code object for ' . $altered_code->period_code . ', academic year ' . $altered_code->acyear);
+            	continue;
             }
+            
+            if($this->update_mappings_for_period($period) === false){
+                $this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $period->code . ', academic year ' . $period->academic_year);
+            	return false;
+            }
+            
+            unset($period);
         }
                     
         if(is_array($altered_codes)){
-        	GLOBAL $DB;
+        	
             foreach($altered_codes as $altered_code){
                 if($altered_code->revert){
                     $delete = $DB->delete_records('sits_period', array('period_code' => $altered_code->period_code, 'acyear' => $altered_code->acyear));
                     $period = $this->get_period_for_code($altered_code->period_code, $altered_code->acyear);
-                    if(is_object($period)){
-                        if($this->update_mappings_for_period($period) === false){
-                            $return = false;
-                            $this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $period->code . ', academic year ' . $period->academic_year);
-                        }
-                    }else{
-                        $this->report->log_report(1, 'Failed to instantiate period code object for ' . $period->code . ', academic year ' . $period->academic_year);
+                    
+                    if(!$period){
+                    	$this->report->log_report(1, 'Failed to instantiate period code object for ' . $altered_code->period_code . ', academic year ' . $altered_code->acyear);
+                    	continue;
                     }
-                }
+
+                    if($this->update_mappings_for_period($period) === false){
+                        $this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $period->code . ', academic year ' . $period->academic_year);
+                        return false;
+                    }
+                    
+                    unset($period);
+                }                                   
             }
         }
-
+        
         foreach($keys_to_remove as $key){
-            $key = (int)$key;
-            $altered_codes[$key] = null; //Don't process any altered codes that will have already been done as a current period code
+        	$key = (int)$key;
+        	$altered_codes[$key] = null; //Don't process any altered codes that will have already been done as a current period code
         }
-
+        
         foreach($altered_codes as $altered_code){
-            if(is_object($altered_code) && !$altered_code->revert){
-                $period = $this->get_period_for_code($altered_code->period_code,$altered_code->acyear);
-                if($this->update_mappings_for_period($period) === false){
-                    $return = false;
-                    $this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $altered_code->period_code . ', academic year ' . $altered_code->acyear);
-                }
-            }
+        	if(is_object($altered_code) && !$altered_code->revert){
+        		$period = $this->get_period_for_code($altered_code->period_code,$altered_code->acyear);
+        
+        		if (!$period) {
+        			$this->report->log_report(1, 'Failed to instantiate period code object for ' . $altered_code->period_code . ', academic year ' . $altered_code->acyear);
+        			continue;
+        		}
+        
+        		if($this->update_mappings_for_period($period) === false){
+        			$this->report->log_report(1, 'Failed update the automatic mappings with period code ' . $altered_code->period_code . ', academic year ' . $altered_code->acyear);
+        			return false;
+        		}
+        
+        		unset($period);
+        	}
         }
-
-        return $return;
+        
+        return true;
     }
     
     public function remove_orphaned_mappings(){
@@ -649,11 +670,11 @@ sql;
 
     /////////////////Wrapping SITS abstraction services////////////////
 
-    public function validate_module(&$module_cohort){
+    public function validate_module($module_cohort){
         return $this->sits->validate_module($module_cohort);
     }
 
-    public function validate_program(&$program_cohort){
+    public function validate_program($program_cohort){
         return $this->sits->validate_program($program_cohort);
     }
 
@@ -729,8 +750,9 @@ sql;
      * @param mapping object $mapping
      * @return object $data
      */
-    private function data_row_object_from_mapping(&$mapping){
-
+    private function data_row_object_from_mapping($mapping){
+		$data = new stdClass();
+		
         if($mapping->cohort->type === 'module'){
             $data->period_code = $mapping->cohort->period_code;
             $data->year_group = null;
@@ -779,8 +801,8 @@ sql;
      * @param mapping_action object $mapping_action
      * @return object
      */
-    private function data_row_object_from_mapping_action(&$mapping_action){
-
+    private function data_row_object_from_mapping_action($mapping_action){
+    	$data = new stdClass();
         $data->map_id = $mapping_action->map_id;
         $data->userid = $mapping_action->userid;
         //Set action id - 0 = create, 1 = update, 2 = deactivate, 3 = activate
@@ -902,7 +924,7 @@ sql;
      * @param object $cohort_data FIXME this could be class-defined
      * @return boolean
      */
-private function create_course_for_cohort(&$cohort_data){
+private function create_course_for_cohort($cohort_data){
 	GLOBAL $DB;
 		
         $course_data = new StdClass();     
@@ -961,7 +983,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function sync_mapping(&$mapping){
+    private function sync_mapping($mapping){
         if(($mapping->start < $this->date && $mapping->end > $this->date) || $mapping->start < $this->date && $mapping->manual){ //...go ahead and sync
             switch($mapping->cohort->type){
                 case 'program':
@@ -982,7 +1004,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return booleanmodule
      */
-    private function sync_program_mapping(&$mapping){
+    private function sync_program_mapping($mapping){
          
         if($mapping->default){ //Default mappings sync all Tutors, Other Tutors and Students
             $members_rh = $this->sits->prog_members_rh($mapping->cohort);
@@ -1001,7 +1023,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function sync_module_mapping(&$mapping){
+    private function sync_module_mapping($mapping){
         if($mapping->default){ //Default mappings sync all Tutors, Other Tutors and Students
             $members_rh = $this->sits->mod_members_rh($mapping->cohort);
         }else{ //Non-default mappings only sync students
@@ -1023,7 +1045,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param mapping object $mapping
      * @return boolean
      */
-    private function process_sync(&$rh, &$mapping){
+    private function process_sync($rh, $mapping){
     	GLOBAL $DB;
 
     	//Ensure instance exists of this on the course
@@ -1103,7 +1125,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param object $sits_enrol_instance
      * @param mapping $mapping
      */
-    private function enrol_user_on_course($user_id, $role_id, &$mapping, &$course_context, &$sits_enrol_instance){
+    private function enrol_user_on_course($user_id, $role_id, $mapping, $course_context, $sits_enrol_instance){
     	GLOBAL $DB;        
              
         $user_enrol_id = $this->enrol_user($sits_enrol_instance, $user_id); //this method has a void return.
@@ -1132,7 +1154,7 @@ private function create_course_for_cohort(&$cohort_data){
      * @param Mapping $mapping
      * @return boolean
      */    
-    private function remove_enrols_for_mapping(&$mapping, $students_only = false){
+    private function remove_enrols_for_mapping($mapping, $students_only = false){
     	GLOBAL $DB, $CFG;
     	if($students_only){
     		$sql = <<<sql
@@ -1172,12 +1194,12 @@ sql;
     
    
     /**
-    * @deprecated use remove_assignments(&$mapping, $students_only = false) instead
+    * @deprecated use remove_assignments($mapping, $students_only = false) instead
     * @param mapping object $mapping
     * @return boolean $students_only
     */
-    private function remove_assignments(&$mapping, $students_only = false){
-    	error('remove_assignments(&$mapping, $students_only = false) not available anymore - please use remove_enrols_for_mapping(&$mapping, $students_only = false)');
+    private function remove_assignments($mapping, $students_only = false){
+    	error('remove_assignments($mapping, $students_only = false) not available anymore - please use remove_enrols_for_mapping($mapping, $students_only = false)');
     }
 
     /**
@@ -1205,7 +1227,7 @@ sql;
      * @param unknown_type $record
      * @return mapping object
      */
-    private function mapping_object_from_record(&$record){
+    private function mapping_object_from_record($record){
         switch($record->type){
             case 'module':
                 $cohort = new module_cohort($record->sits_code, $record->period_code, $record->acyear);
@@ -1247,7 +1269,7 @@ sql;
      * @param object $assignment
      * @return boolean
      */
-    private function take_assignment_ownership(&$mapping, &$assignment){
+    private function take_assignment_ownership($mapping, $assignment){
         GLOBAL $DB, $CFG; 
         $update = false;
                  
@@ -1296,7 +1318,7 @@ sql;
      * @param module_cohort object $module_cohort
      * @return boolean
      */
-    private function ensure_module_has_default_mapping(&$courses, &$module_cohort){
+    private function ensure_module_has_default_mapping($courses, $module_cohort){
         
     	GLOBAL $DB;
     	//Set boolean return variable to be switched if there is a problem
@@ -1347,7 +1369,7 @@ sql;
      * @param program_cohort object $program_cohort
      * @return boolean
      */
-    private function ensure_program_has_default_mapping(&$courses, &$program_cohort){
+    private function ensure_program_has_default_mapping($courses, $program_cohort){
         //Set boolean return variable to be switched if there is a problem
         $return = true;
 
@@ -1380,7 +1402,7 @@ sql;
      * @param sits_period object $period
      * @return boolean
      */
-    private function update_mappings_for_period(&$period){
+    private function update_mappings_for_period($period){
     	GLOBAL $DB;
         $return = true;
         
@@ -1408,7 +1430,7 @@ sql;
         $where = <<<sql
 period_code = '%s'
 AND acyear = '%s' 
-AND manual = 1 OR specified = 1
+AND (manual = 1 OR specified = 1)
 sql;
 
         $set_start = $DB->set_field_select('sits_mappings', 'start_date', $period->start->format('Y-m-d H:i:s'), sprintf($where, $period->code, $period->academic_year));
@@ -1427,7 +1449,7 @@ sql;
      * @param mapping object $mapping
      * @param string $action
      */
-    private function add_mapping_action(&$mapping, $action){
+    private function add_mapping_action($mapping, $action){
 
         global $USER, $DB;
         if(is_object($USER)){
@@ -1460,7 +1482,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function validate_mapping(&$mapping){
+    private function validate_mapping($mapping){
     	GLOBAL $DB;
         
         $valid = true;
@@ -1515,7 +1537,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function convert_mapping_to_active_default(&$mapping){
+    private function convert_mapping_to_active_default($mapping){
         $mapping->default = true;
         $mapping->active = true;
         if($mapping->manual){
@@ -1540,7 +1562,7 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function remove_assignments_no_longer_in_cohort(&$sits_cohort_members, &$mapping){
+    private function remove_assignments_no_longer_in_cohort($sits_cohort_members, $mapping){
     	GLOBAL $DB;
     	$return = true;
 
@@ -1579,16 +1601,18 @@ sql;
      * @param mapping object $mapping
      * @return boolean
      */
-    private function housekeep_mapping(&$mapping){
+    private function housekeep_mapping($mapping){
     	GLOBAL $DB;
         $course = $DB->get_record('course', array('id' => $mapping->courseid));
         if(!is_object($course)){
             $this->report->log_report(1, 'housekeep_mapping could not get course object for mapping id ' . $mapping->id);
             return false;
         }
-        /* This block deactives and un-defaults mappings for which the idnumber of the corresponding course has changed.
-         * It was decided instead to keep all old defaults as-is in such an instance, so commented out for now, but you never know
-         * when these things change back again.
+        
+        //This next block deactives and un-defaults mappings for which the idnumber of the corresponding course has changed.
+        //This is in and out like a bloody yo-yo.  First in, then it was decided instead to keep all old defaults as-is in such an instance
+        //Now back again.
+        
         if($mapping->default && $mapping->cohort->sits_code != $course->idnumber){
             //Most likely somebody's changed the idumber through the Course Settings interface
             //So now this is no longer a default mapping for this course, and so
@@ -1598,7 +1622,7 @@ sql;
                 $this->report->log_report(2, 'housekeep_mapping could not update mapping ' . $mapping->id);
                 return false;
             }
-        }*/
+        }
         if(($mapping->end < $this->date || $mapping->start > $this->date) && !$mapping->manual && $mapping->active){
             //Mapping is auto and out of period, remove any associated Student assignments and return
             //This is to cater for the period code having between changed by an administrator in Moodle

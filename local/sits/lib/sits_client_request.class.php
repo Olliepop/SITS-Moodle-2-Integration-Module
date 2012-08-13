@@ -47,7 +47,7 @@ class sits_client_request {
     private $sits_sync; //Object
     private $content_type = null; //string
 
-    public function __construct(&$op, &$xml, $testing = false){
+    public function __construct($op, $xml, $testing = false){
         $this->op = $op;
         $this->xml = new SimpleXMLElement($xml);
         $this->sits_sync = enrol_get_plugin('sits');
@@ -131,7 +131,7 @@ EOXML;
         $returnXMLObj = new SimpleXMLElement($returnXML);
         foreach($this->xml->children() as $tag => $course_id){
             $returnXMLObj->addChild('course_id', $course_id);
-            if($this->sync_course($course_id, &$this->sits_sync)){
+            if($this->sync_course($course_id, $this->sits_sync)){
                 $returnXMLObj->addChild('synced', $course_id);
             }else{
                 //FIXME The Moodle function get_records, used by sits_sync::sync_course,
@@ -304,7 +304,7 @@ EOXML;
      * @param SimpleXML object $mappingXML
      * @param SimpleXML object $returnXMLObj
      */
-    private function process_batch_element(&$mapping, &$mappingXML, &$returnXMLObj){
+    private function process_batch_element($mapping, $mappingXML, $returnXMLObj){
         foreach($mappingXML->children() as $tag => $value){
             if($tag == 'delete'){
                 $mapping->manual = true; 

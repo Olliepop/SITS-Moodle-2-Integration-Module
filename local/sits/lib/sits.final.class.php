@@ -13,7 +13,7 @@ require_once($CFG->dirroot . '/local/sits/config/sits_config.php');
  */
 final class sits extends sits_db {
 
-    function __construct(&$report, $testing = false){
+    function __construct($report, $testing = false){
         //Connect to Oracle, or log error and return false
         if(!$testing){
             $this->dbh = ocilogon(SITS_DB_USER, SITS_DB_PASS, SITS_DB_NAME);

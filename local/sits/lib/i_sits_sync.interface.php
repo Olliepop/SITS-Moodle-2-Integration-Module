@@ -24,7 +24,7 @@ interface i_sits_sync {
      * @param mapping object $mapping
      * @return boolean
      */
-    public function create_mapping(&$mapping);
+    public function create_mapping($mapping);
     /**
      * Given a valid Moodle course id will return an array of that course's mapping objects
      * @param string $sits_code
@@ -36,27 +36,27 @@ interface i_sits_sync {
      * @param $mapping
      * @return boolean
      */
-    public function update_mapping(&$mapping);
+    public function update_mapping($mapping);
     /**
      * Given a valid mapping object relating to a current mapping, this will deactivate that mapping;.
      * It will not delete the record
      * @param $mapping
      * @return boolean
      */
-    public function deactivate_mapping(&$mapping);
+    public function deactivate_mapping($mapping);
     /**
      * Given a valid mapping object relating to a current mapping will delete that mapping record
      * @param $mapping
      * @return boolean
      */
-    public function delete_mapping(&$mapping);
+    public function delete_mapping($mapping);
     /**
      * Given a valid cohort object and Moodle course id, returns a mapping object for that mapping if one exists, else false
      * @param cohort object $cohort
      * @param integer $courseid
      * @return Mapping object if one exists, false if not
      */
-    public function read_mapping_for_course(&$cohort, $courseid);
+    public function read_mapping_for_course($cohort, $courseid);
     /**
      * Given a valid mapping id, returns a mapping object, or false on faliure
      * @param unknown_type $mapping_id
@@ -89,7 +89,7 @@ interface i_sits_sync {
      * to a date different from that defined in SITS
      * @param period_alteration object $period_alteration
      */
-    public function alter_period(&$period_alteration);    
+    public function alter_period($period_alteration);    
     
     /**
      * Updates all mappings period start and end dates

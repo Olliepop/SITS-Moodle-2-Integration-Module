@@ -801,7 +801,7 @@ sits_block.asyncRequest = function (op, xml) {
 					sits_block.disable_save(courses[i].firstChild.data);
 					sits_block.swapLoadMessageForControls(courses[i].firstChild.data, true);
 					if(sits_block.isBlock){
-						sits_block.set_group_options();
+						//sits_block.set_group_options();
 					}
 				}	
 			};
@@ -1338,9 +1338,8 @@ sits_block.update_group_list = function (courseid) {
 };
 
 sits_block.set_group_options = function () {
-	
 	var selectElement;
-	sits_block.hideGroupNoMaps();
+	//sits_block.hideGroupNoMaps();
 	sits_block.showGroupLoading('Loading mapped cohorts - please wait');
 	selectElement = YAHOO.util.Dom.get('grp_course');
 	sits_block.update_cohort_list(selectElement.options[selectElement.selectedIndex].value);
@@ -1771,7 +1770,7 @@ sits_block.user_init = function () {
     $$('input.add').invoke('enable');
     sits_block.switch_view('cohort');
     sits_block.toggle_dates('add');
-    sits_block.set_group_options();
+    //sits_block.set_group_options();
 };
 
 sits_block.course_init = function (courseid) {
