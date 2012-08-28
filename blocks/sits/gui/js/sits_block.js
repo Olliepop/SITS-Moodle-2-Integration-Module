@@ -1451,7 +1451,7 @@ sits_block.disable_save = function (courseid)
 };
 
 sits_block.view_course = function (course_id) {
-	window.open('/blocks/sits/gui/views/enrols.php?id=' + course_id, '', 'height = 600px, width = 800px, scrollbars=yesresizable');
+	window.open('/blocks/sits/gui/views/enrols.php?id=' + course_id, '', 'height = 600px, width = 800px, scrollbars=yes, resizable=yes');
 };
 
 sits_block.add_user = function () {
