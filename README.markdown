@@ -1,8 +1,8 @@
-##SITS-Moodle Integration Modules for Moodle 2.x
+## SITS-Moodle Integration Modules for Moodle 2.x
 
 This software integrates the SITS Vision student information system with Moodle 2.x
 
-##Installation
+## Installation
 
 1) Copy the directory blocks/sits into <moodle_root>/blocks/
 
@@ -14,7 +14,7 @@ This software integrates the SITS Vision student information system with Moodle 
 
 5) On the Moodle homepage click 'Notifications' - Moodle will then install the block.
 
-##Be Aware
+## Be Aware
 
 **This software is currently in development and due to go live at the University of Bath with their move to Moodle 2**.
 
